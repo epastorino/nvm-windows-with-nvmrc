@@ -337,7 +337,23 @@ func getVersion(version string, cpuarch string, localInstallsOnly ...bool) (stri
 	}
 
 	if version == "" {
-		return "", cpuarch, errors.New("A version argument is required but missing.")
+		// Check for .nvmrc file in the current directory
+		nvmrcPath := ".nvmrc"
+		content, err := os.ReadFile(nvmrcPath)
+		if err != nil {
+			// .nvmrc file does not exist or cannot be read
+			return "", cpuarch, errors.New("A version argument is required but missing, and .nvmrc file is not found.")
+		}
+
+		// Extract the first line from the .nvmrc file
+		lines := strings.SplitN(string(content), "\n", 2)
+		if len(lines) > 0 {
+			version = strings.TrimSpace(lines[0])
+		}
+
+		if version == "" {
+			return "", cpuarch, errors.New(".nvmrc file must have a valid nodejs version in the first line.")
+		}
 	}
 
 	// If user specifies "latest" version, find out what version is
